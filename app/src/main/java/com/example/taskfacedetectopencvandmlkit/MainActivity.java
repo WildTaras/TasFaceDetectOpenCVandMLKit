@@ -42,6 +42,8 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 import static android.graphics.ImageFormat.NV21;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2{
 
@@ -125,18 +127,21 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                 for(int i = 0; i < 3; i++) {
                     orientations[i] = (float)(Math.toDegrees(orientations[i]));
                 }
-                if(orientations[2] > 85) {
+                if((orientations[2] > 45) && (orientations[2] < 135)) {
                     Log.e(TAG, "Right rotate");
-                    rotationAngle = 180;
+        //            rotationAngle = 180;
                     rotationForMetadata = 2;
-                } else if(orientations[2] < -85) {
+                } else if((orientations[2] < -45) && (orientations[2] > -135)) {
                     Log.e(TAG, "Left rotate");
-                    rotationAngle = 0;
+       //             rotationAngle = 0;
                     rotationForMetadata = 0;
-                } else if(Math.abs(orientations[2]) < 10 && Math.abs(orientations[2]) > -10 ) {
-                    Log.e(TAG, "without characteristics");
-                    rotationAngle = 90;
+                } else if((Math.abs(orientations[2]) < 45) && (Math.abs(orientations[2]) > -45) ) {
+                    Log.e(TAG, "Portrait");
+     //               rotationAngle = 90;
                     rotationForMetadata = 3;
+                } else /*( (Math.abs(orientations[2]) < -170) && Math.abs(orientations[2] ) > 170)*/ {
+                    Log.e(TAG, "Rotate portrait");
+                    rotationForMetadata = 1;
                 }
             }
 
@@ -250,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         // rotate image
 
         Point center = new Point(mRgba.cols()>>1,mRgba.rows()>>1);
-        Mat M = Imgproc.getRotationMatrix2D(center,rotationAngle,1);
+        Mat M = Imgproc.getRotationMatrix2D(center,90,1);
         Imgproc.warpAffine(mRgba, mRgba, M, new Size(width,height));
 
 
@@ -296,17 +301,33 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                         time.endTime();
                     }
                 });
+
+        Imgproc.rectangle(mRgba, new Point(0, 0),
+                new Point(200, 200), new Scalar(255, 120, 120), 2);
+
         if(flag != false) {
             int offsetX = (width - height) >> 1;
             int offsetY = offsetX >> 1;
-            Imgproc.circle(mRgba,new Point(rect.left,rect.top), 5, new Scalar(120, 30, 40), 3);
-             if(rotationForMetadata == 3 ){
+            if(rotationForMetadata == 3 ){
                 Imgproc.rectangle(mRgba, new Point(rect.left + offsetX, rect.top - offsetX),
                         new Point(rect.right + offsetX, rect.bottom - offsetY ), new Scalar(255, 120, 120), 2);
+            } else if( rotationForMetadata == 0){
+              Imgproc.rectangle(mRgba,
+                         new Point( rect.top + offsetY , width - offsetX - rect.left ),
+                         new Point( rect.bottom + offsetX + offsetY, width - offsetX - rect.right),// calculate offset without
+                         new Scalar(255, 120, 120), 2);
+            } else if ( rotationForMetadata == 2){
+                Imgproc.rectangle(mRgba,
+                        new Point( width - offsetX - rect.top ,  rect.left - offsetX ),
+                        new Point( height + offsetY - rect.bottom ,  rect.right - offsetX),
+                        new Scalar(255, 120, 120), 2);
 
-            } else {
-                Imgproc.rectangle(mRgba, new Point(rect.left, rect.top),
-                        new Point(rect.right, rect.bottom + offsetY), new Scalar(255, 120, 120), 2);
+             } else {
+                Imgproc.rectangle(mRgba,
+                        new Point( 640 - rect.left - offsetX, 480 - rect.top + offsetX),
+                        new Point( 640 - rect.right - offsetX, 480 - rect.bottom + offsetY),
+                        new Scalar(255, 120, 120), 2);
+
             }
            flag = false;
         }
