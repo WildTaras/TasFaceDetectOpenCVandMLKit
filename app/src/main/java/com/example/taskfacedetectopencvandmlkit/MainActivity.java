@@ -56,6 +56,11 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     private int rotationAngle;
 
 
+    private final float[] rotationMatrix = new float[9];
+    private final float[] remappedRotationMatrix = new float[9];
+    private final float[] orientationAngles = new float[3];
+
+
     private WindowManager windowManager;
     private SensorManager sensorManager;
     private Sensor rvSensor;
@@ -110,37 +115,33 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         Log.e(TAG, "In OnCreate");
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        rvSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        rvSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
         rvSensorListener = new SensorEventListener() {
             @Override
             public void onSensorChanged(SensorEvent event) {
-                float[] rotationMatrix = new float[16];
-                SensorManager.getRotationMatrixFromVector(
-                        rotationMatrix, event.values);
-                float[] remappedRotationMatrix = new float[16];
+                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
                 SensorManager.remapCoordinateSystem(rotationMatrix,
                         SensorManager.AXIS_X,
                         SensorManager.AXIS_Z,
                         remappedRotationMatrix);
-                float[] orientations = new float[3];
-                SensorManager.getOrientation(remappedRotationMatrix, orientations);
+                SensorManager.getOrientation(remappedRotationMatrix, orientationAngles);
+
+
                 for(int i = 0; i < 3; i++) {
-                    orientations[i] = (float)(Math.toDegrees(orientations[i]));
+                    orientationAngles[i] = (float)(Math.toDegrees(orientationAngles[i]));
                 }
-                if((orientations[2] > 45) && (orientations[2] < 135)) {
+
+                if((orientationAngles[2] > 45) && (orientationAngles[2] < 135)) {
                     Log.e(TAG, "Right rotate");
-        //            rotationAngle = 180;
                     rotationForMetadata = 2;
-                } else if((orientations[2] < -45) && (orientations[2] > -135)) {
+                } else if((orientationAngles[2] < -45) && (orientationAngles[2] > -135)) {
                     Log.e(TAG, "Left rotate");
-       //             rotationAngle = 0;
                     rotationForMetadata = 0;
-                } else if((Math.abs(orientations[2]) < 45) && (Math.abs(orientations[2]) > -45) ) {
+                } else if((Math.abs(orientationAngles[2]) < 45) && (Math.abs(orientationAngles[2]) > -45) ) {
                     Log.e(TAG, "Portrait");
-     //               rotationAngle = 90;
                     rotationForMetadata = 3;
                 } else /*( (Math.abs(orientations[2]) < -170) && Math.abs(orientations[2] ) > 170)*/ {
-                    Log.e(TAG, "Rotate portrait");
+//                    Log.e(TAG, "Rotate portrait");
                     rotationForMetadata = 1;
                 }
             }
@@ -302,8 +303,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
                     }
                 });
 
-        Imgproc.rectangle(mRgba, new Point(0, 0),
-                new Point(200, 200), new Scalar(255, 120, 120), 2);
 
         if(flag != false) {
             int offsetX = (width - height) >> 1;
