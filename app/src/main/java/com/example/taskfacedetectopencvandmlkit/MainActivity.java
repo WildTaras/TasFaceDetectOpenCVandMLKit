@@ -48,30 +48,18 @@ import static java.lang.Math.sin;
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2{
 
     CameraBridgeViewBase cameraView;
+    private OrientationDataProvider orientationDataProvider;
 
     private static final String TAG = "APP";
     private int height;
     private int width;
     private int rotationForMetadata;
-    private int rotationAngle;
-
-
-    private final float[] rotationMatrix = new float[9];
-    private final float[] remappedRotationMatrix = new float[9];
-    private final float[] orientationAngles = new float[3];
-
-
-    private WindowManager windowManager;
-    private SensorManager sensorManager;
-    private Sensor rvSensor;
-    private SensorEventListener rvSensorListener;
 
 
     Mat mRgba;
     Rect rect;
     int mFPS = 0;
     long allTime = 0;
-    long faceTime = 0;
     long timeSlot = 1000;
     TextView txt1;
     boolean flag = false;
@@ -112,66 +100,9 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         txt1 = findViewById(R.id.txt1);
         time = new TimeCounter();
+        orientationDataProvider = OrientationDataProvider.getInstance(this, HardwareOrientationConfig.NONGYROSCOPE);
         Log.e(TAG, "In OnCreate");
 
-        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        rvSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GEOMAGNETIC_ROTATION_VECTOR);
-        rvSensorListener = new SensorEventListener() {
-            @Override
-            public void onSensorChanged(SensorEvent event) {
-                SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-                SensorManager.remapCoordinateSystem(rotationMatrix,
-                        SensorManager.AXIS_X,
-                        SensorManager.AXIS_Z,
-                        remappedRotationMatrix);
-                SensorManager.getOrientation(remappedRotationMatrix, orientationAngles);
-
-
-                for(int i = 0; i < 3; i++) {
-                    orientationAngles[i] = (float)(Math.toDegrees(orientationAngles[i]));
-                }
-
-                if((orientationAngles[2] > 45) && (orientationAngles[2] < 135)) {
-                    Log.e(TAG, "Right rotate");
-                    rotationForMetadata = 2;
-                } else if((orientationAngles[2] < -45) && (orientationAngles[2] > -135)) {
-                    Log.e(TAG, "Left rotate");
-                    rotationForMetadata = 0;
-                } else if((Math.abs(orientationAngles[2]) < 45) && (Math.abs(orientationAngles[2]) > -45) ) {
-                    Log.e(TAG, "Portrait");
-                    rotationForMetadata = 3;
-                } else /*( (Math.abs(orientations[2]) < -170) && Math.abs(orientations[2] ) > 170)*/ {
-//                    Log.e(TAG, "Rotate portrait");
-                    rotationForMetadata = 1;
-                }
-            }
-
-            @Override
-            public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
-            }
-        };
-        sensorManager.registerListener(rvSensorListener, rvSensor, SensorManager.SENSOR_DELAY_NORMAL);
-/*
-        windowManager = (WindowManager) this.getSystemService(WINDOW_SERVICE);
-        Log.e(TAG, "Rotattion: " + windowManager.getDefaultDisplay().getRotation());
-        switch (windowManager.getDefaultDisplay().getRotation()) {
-            case 0:
-                rotationAngle = 90;
-                rotationForMetadata = 3;
-                break;
-            case 1:
-                rotationAngle = 0;
-                rotationForMetadata = 0;
-                break;
-            case 3:
-                rotationAngle = 180;
-                rotationForMetadata = 2;
-                break;
-            default:
-                Log.e(TAG, "Something wrong");
-        }
-*/
     }
 
     @Override
@@ -237,6 +168,21 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         FirebaseVisionFaceDetectorOptions options =
                 new FirebaseVisionFaceDetectorOptions.Builder()
                         .build();
+
+        float orientationZ = orientationDataProvider.axisZ();
+
+        if((orientationZ > 45) && (orientationZ < 135)) {
+            Log.e(TAG, "Right rotate");
+            rotationForMetadata = 2;
+        } else if((orientationZ < -45) && (orientationZ > -135)) {
+            Log.e(TAG, "Left rotate");
+            rotationForMetadata = 0;
+        } else if((orientationZ < 45) && (orientationZ > -45) ) {
+            Log.e(TAG, "Portrait");
+            rotationForMetadata = 3;
+        } else {
+            rotationForMetadata = 1;
+        }
 
         FirebaseVisionImageMetadata metadata = new FirebaseVisionImageMetadata.Builder()
                 .setWidth(width/upscaleParam)
