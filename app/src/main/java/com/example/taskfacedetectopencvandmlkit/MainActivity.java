@@ -47,7 +47,7 @@ import static java.lang.Math.sin;
 
 public class MainActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2{
 
-    CameraBridgeViewBase cameraView;
+    CameraBridgeViewBase cameraView = null;
     private OrientationDataProvider orientationDataProvider;
 
     private static final String TAG = "APP";
@@ -93,10 +93,13 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
         ActivityCompat.requestPermissions(
                 this, new String[]{Manifest.permission.CAMERA},1 );
-
-        cameraView = (JavaCameraView)findViewById(R.id.jcvCamera);
-        cameraView.setVisibility(SurfaceView.VISIBLE);
-        cameraView.setCvCameraViewListener(this);
+        Log.e(TAG, "IsAvailable " + cameraView);
+        if(cameraView == null) {
+            cameraView = (JavaCameraView) findViewById(R.id.jcvCamera);
+            cameraView.setVisibility(SurfaceView.VISIBLE);
+            cameraView.setCvCameraViewListener(this);
+        }
+        Log.e(TAG, "IsAvailable " + cameraView);
 
         txt1 = findViewById(R.id.txt1);
         time = new TimeCounter();
@@ -172,13 +175,10 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         float orientationZ = orientationDataProvider.axisZ();
 
         if((orientationZ > 45) && (orientationZ < 135)) {
-            Log.e(TAG, "Right rotate");
             rotationForMetadata = 2;
         } else if((orientationZ < -45) && (orientationZ > -135)) {
-            Log.e(TAG, "Left rotate");
             rotationForMetadata = 0;
         } else if((orientationZ < 45) && (orientationZ > -45) ) {
-            Log.e(TAG, "Portrait");
             rotationForMetadata = 3;
         } else {
             rotationForMetadata = 1;
