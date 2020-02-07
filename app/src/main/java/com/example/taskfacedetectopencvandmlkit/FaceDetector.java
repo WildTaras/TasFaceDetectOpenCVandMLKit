@@ -1,15 +1,8 @@
 package com.example.taskfacedetectopencvandmlkit;
 
-import android.app.Activity;
-import android.content.Context;
 import android.graphics.Rect;
 import android.util.Log;
-import android.view.SurfaceView;
-import android.view.View;
-import android.widget.TextView;
-
 import androidx.annotation.NonNull;
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -19,29 +12,19 @@ import com.google.firebase.ml.vision.common.FirebaseVisionImageMetadata;
 import com.google.firebase.ml.vision.face.FirebaseVisionFace;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetector;
 import com.google.firebase.ml.vision.face.FirebaseVisionFaceDetectorOptions;
-
-import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.JavaCameraView;
-import org.opencv.android.LoaderCallbackInterface;
-import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import static android.graphics.ImageFormat.NV21;
 
 public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 {
 
-    private static FaceDetector instance;
-    private CameraBridgeViewBase cameraView;
-    private OrientationDataProvider orientationDataProvider;
-    private BaseLoaderCallback baseLoaderCallback;
+
     private static final String TAG = "FACEDETECTOR";
 
     private int height;
@@ -56,66 +39,8 @@ public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 
     private boolean flag = false;
     private TimeCounter time;
 
-    private FaceDetector(Context context, JavaCameraView view) {
-        cameraView = view;
-        cameraView.setVisibility(SurfaceView.VISIBLE);
-        cameraView.setCvCameraViewListener(this);
-        baseLoaderCallback = new BaseLoaderCallback(context) {
-            @Override
-            public void onManagerConnected(int status) {
-                super.onManagerConnected(status);
-                switch (status) {
-                    case BaseLoaderCallback.SUCCESS:
-                        cameraView.setCameraPermissionGranted();
-                        cameraView.SetCaptureFormat(NV21); // set
-                        cameraView.setMaxFrameSize(640, 480 );
-                        //cameraView.setCameraIndex(99);
-                        cameraView.enableView();
-                        break;
-                    default:
-                        super.onManagerConnected(status);
-                        break;
-                }
-            }
-        };
+    public FaceDetector() {
         time = new TimeCounter();
-        orientationDataProvider = OrientationDataProvider.getInstance(context, HardwareOrientationConfig.NONGYROSCOPE);
-    }
-
-    public void initOpenCVDebug(Context context) {
-        if(!OpenCVLoader.initDebug()){
-            Log.e(TAG, "Smth wrong");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, context, baseLoaderCallback);
-        } else {
-            baseLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        }
-
-    }
-
-    public BaseLoaderCallback getBaseLoaderCallback() {
-        return baseLoaderCallback;
-    }
-
-    public void setVisibility() {
-        cameraView.setVisibility(SurfaceView.VISIBLE);
-        cameraView.setCvCameraViewListener(this);
-    }
-
-
-
-    public static FaceDetector getInstance(Context context, JavaCameraView view) {
-        if(instance == null) {
-            instance = new FaceDetector(context, view);
-        }
-        return instance;
-    }
-
-    public boolean isCameraViewEnabled() {
-        return cameraView != null;
-    }
-
-    public void cameraViewDisabled() {
-        cameraView.disableView();
     }
 
     @Override
@@ -139,7 +64,7 @@ public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 
                 new FirebaseVisionFaceDetectorOptions.Builder()
                         .build();
 
-        float orientationZ = orientationDataProvider.axisZ();
+        float orientationZ = OrientationDataProvider.getInstance().axisZ();
 
         if((orientationZ > 45) && (orientationZ < 135)) {
  //           Log.e(TAG, "Right rotate");

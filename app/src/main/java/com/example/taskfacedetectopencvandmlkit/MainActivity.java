@@ -48,12 +48,28 @@ import static java.lang.Math.sin;
 
 public class MainActivity extends AppCompatActivity{
 
-    CameraBridgeViewBase cameraView;
-    private OrientationDataProvider orientationDataProvider;
-
     private static final String TAG = "APP";
 
+    private CameraBridgeViewBase cameraView;
     FaceDetector faceDetector;
+    private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(this) {
+        @Override
+        public void onManagerConnected(int status) {
+            super.onManagerConnected(status);
+            switch (status) {
+                case BaseLoaderCallback.SUCCESS:
+                    cameraView.setCameraPermissionGranted();
+                    cameraView.SetCaptureFormat(NV21); // set
+                    cameraView.setMaxFrameSize(640, 480 );
+                    //cameraView.setCameraIndex(99);
+                    cameraView.enableView();
+                    break;
+                default:
+                    super.onManagerConnected(status);
+                    break;
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,7 +78,12 @@ public class MainActivity extends AppCompatActivity{
         FirebaseApp.initializeApp(this);
         ActivityCompat.requestPermissions(
                 this, new String[]{Manifest.permission.CAMERA},1 );
-        faceDetector = FaceDetector.getInstance(this, (JavaCameraView) findViewById(R.id.jcvCamera));
+
+        faceDetector = new FaceDetector();
+        cameraView = findViewById(R.id.jcvCamera);
+        cameraView.setVisibility(SurfaceView.VISIBLE);
+        cameraView.setCvCameraViewListener(faceDetector);
+
     }
 
     @Override
@@ -81,25 +102,25 @@ public class MainActivity extends AppCompatActivity{
     protected void onResume() {
         super.onResume();
         Log.e(TAG, "In OnResume");
-        faceDetector.initOpenCVDebug(this);
+        if(!OpenCVLoader.initDebug()){
+            Log.e(TAG, "Smth wrong");
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, baseLoaderCallback);
+        } else {
+            baseLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        }
+
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         Log.e(TAG, "In onPause");
-        if(faceDetector.isCameraViewEnabled()) {
-            faceDetector.cameraViewDisabled();
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         Log.e(TAG, "In onDestroy");
-        if(faceDetector.isCameraViewEnabled()) {
-            faceDetector.cameraViewDisabled();
-        }
     }
 
 }
