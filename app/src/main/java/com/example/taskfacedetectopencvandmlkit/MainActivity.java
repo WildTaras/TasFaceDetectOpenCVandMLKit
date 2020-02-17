@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity{
 
     private CameraBridgeViewBase cameraView;
     FaceDetector faceDetector;
+    TextView fpsCount;
     private BaseLoaderCallback baseLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
@@ -60,7 +61,7 @@ public class MainActivity extends AppCompatActivity{
                 case BaseLoaderCallback.SUCCESS:
                     cameraView.setCameraPermissionGranted();
                     cameraView.SetCaptureFormat(NV21); // set
-                    cameraView.setMaxFrameSize(640, 480 );
+                    cameraView.setMaxFrameSize(480, 640 );
                     //cameraView.setCameraIndex(99);
                     cameraView.enableView();
                     break;
@@ -80,6 +81,8 @@ public class MainActivity extends AppCompatActivity{
                 this, new String[]{Manifest.permission.CAMERA},1 );
 
         faceDetector = new FaceDetector();
+
+        fpsCount = findViewById(R.id.txt1);
         cameraView = findViewById(R.id.jcvCamera);
         cameraView.setVisibility(SurfaceView.VISIBLE);
         cameraView.setCvCameraViewListener(faceDetector);
@@ -122,5 +125,6 @@ public class MainActivity extends AppCompatActivity{
         super.onDestroy();
         Log.e(TAG, "In onDestroy");
     }
+
 
 }

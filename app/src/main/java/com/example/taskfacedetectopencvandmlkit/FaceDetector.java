@@ -20,6 +20,7 @@ import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Observable;
 
 
 public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 {
@@ -41,6 +42,7 @@ public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 
 
     public FaceDetector() {
         time = new TimeCounter();
+
     }
 
     @Override
@@ -143,13 +145,12 @@ public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 
                     }
                 });
 
-
         if(flag != false) {
             int offsetX = (width - height) >> 1;
             int offsetY = offsetX >> 1;
             if(rotationForMetadata == 3 ){
-                Imgproc.rectangle(mRgba, new Point(rect.left + offsetX, rect.top - offsetX),
-                        new Point(rect.right + offsetX, rect.bottom - offsetY ), new Scalar(255, 120, 120), 2);
+                Imgproc.rectangle(mRgba, new Point(rect.left + offsetX, rect.top - offsetY),
+                        new Point(rect.right + offsetX, rect.bottom - offsetX - offsetY ), new Scalar(255, 120, 120), 2);
             } else if( rotationForMetadata == 0){
                 Imgproc.rectangle(mRgba,
                         new Point( rect.top + offsetY , width - offsetX - rect.left ),
@@ -170,6 +171,32 @@ public class FaceDetector implements CameraBridgeViewBase.CvCameraViewListener2 
             }
             flag = false;
         }
+//        if(flag != false) {
+//            int offsetX = (width - height) >> 1;
+//            int offsetY = offsetX >> 1;
+//            if(rotationForMetadata == 3 ){
+//                Imgproc.rectangle(mRgba, new Point(rect.left + offsetX, rect.top - offsetX),
+//                        new Point(rect.right + offsetX, rect.bottom - offsetY ), new Scalar(255, 120, 120), 2);
+//            } else if( rotationForMetadata == 0){
+//                Imgproc.rectangle(mRgba,
+//                        new Point( rect.top + offsetY , width - offsetX - rect.left ),
+//                        new Point( rect.bottom + offsetX + offsetY, width - offsetX - rect.right),// calculate offset without
+//                        new Scalar(255, 120, 120), 2);
+//            } else if ( rotationForMetadata == 2){
+//                Imgproc.rectangle(mRgba,
+//                        new Point( width - offsetX - rect.top ,  rect.left - offsetX ),
+//                        new Point( height + offsetY - rect.bottom ,  rect.right - offsetX),
+//                        new Scalar(255, 120, 120), 2);
+//
+//            } else {
+//                Imgproc.rectangle(mRgba,
+//                        new Point( 640 - rect.left - offsetX, 480 - rect.top + offsetX),
+//                        new Point( 640 - rect.right - offsetX, 480 - rect.bottom + offsetY),
+//                        new Scalar(255, 120, 120), 2);
+//
+//            }
+//            flag = false;
+//        }
         return mRgba;
     }
 }
